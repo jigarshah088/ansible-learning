@@ -1,0 +1,57 @@
+creating ssh key relation between ansible controll machine and slaves :
+
+install ansible on controll machine :
+
+sudo apt update && sudo apt install ansible
+
+create ansible role :
+
+ansible-galaxy role init ansible-practice
+
+main.yml ==> first generate the ssh key in master/controll server. and then copy it to slaves :
+
+---
+
+- name: Generate SSH key pair
+
+  hosts: localhost
+
+  gather_facts: false
+
+  tasks:
+
+    - name: Generate RSA private key
+
+      openssl_privatekey:
+
+        path: ~/.ssh/id_rsa
+
+        type: RSA
+
+        size: 2048
+
+    - name: Generate public key from private key
+
+      shell: ssh-keygen -y -f ~/.ssh/id_rsa > ~/.ssh/id_rsa.pub
+
+- name: Establish SSH connection between control machine and dev
+
+  hosts: dev,test
+
+  gather_facts: false
+
+  tasks:
+
+    - name: Add control machine's public SSH key to authorized_keys
+
+      authorized_key:
+
+        user: adminuser  # Replace 'remote_user' with the actual username on the dev server
+
+        key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+
+        state: present
+
+
+
+
